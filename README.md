@@ -2,15 +2,15 @@
 
 <p align="center"><img src="https://i.imgur.com/SVRjUhU.png" width="640px"/></p>
 
-Huff is a domain-specific language created for the purposes of writing highly optimized Ethereum Virtual Machine program code and, ultimately, smart contracts.  
+Huff is a domain-specific language created for the purposes of writing highly optimized Ethereum Virtual Machine program code and, ultimately, smart contracts.
 
 Huff enables the construction of EVM assembly macros - blocks of bytecode that can be rigorously tested and evaluated. Macros can themselves be composed of Huff macros.
 
-Huff doesn't hide the workings of the EVM behind syntactic sugar. In fact, Huff doesn't hide anything at all. Huff does not have variables, instead directly exposing the EVM's program stack to the developer to be directly manipulated.  
+Huff doesn't hide the workings of the EVM behind syntactic sugar. In fact, Huff doesn't hide anything at all. Huff does not have variables, instead directly exposing the EVM's program stack to the developer to be directly manipulated.
 
 ### **"Wait...that sounds terrible! What is the point of huff?"**
 
-I developed Huff while writing [weierstrudel](https://github.com/AztecProtocol/weierstrudel/tree/master/huff_modules), an elliptic curve arithmetic library. Huff is designed for developing highly optimized algorithms where direct manipulation of the program's bytecode is preferred.  
+I developed Huff while writing [weierstrudel](https://github.com/AztecProtocol/weierstrudel/tree/master/huff_modules), an elliptic curve arithmetic library. Huff is designed for developing highly optimized algorithms where direct manipulation of the program's bytecode is preferred.
 
 Huff supports a form of templating - Huff macros can accept template parameters, which in turn are Huff macros. This allows for customizable macros that are ideal for loop unrolling. 
 
@@ -26,7 +26,7 @@ There are only two fundamental building blocks to a Huff program:
 
 ### **Macros**
 
-Some example macros:  
+Some example macros:
 
 ```
 #define macro P = takes(0) returns(1) {
@@ -67,15 +67,15 @@ template <p1,p2>
 }
 ```
 
-The `takes` parameter defines the number of items the macro expects to be on the stack.  
-The `returns` parameter defines the number of items the macro will leave on the stack (including the items from `takes`).  
+The `takes` parameter defines the number of items the macro expects to be on the stack.
+The `returns` parameter defines the number of items the macro will leave on the stack (including the items from `takes`).
 These fields are for illustrative purposes only - they are not enforced by the compiler, as that would inhibit macros where the stack state is unknowable at compile time. Some languages might consider that a negative, but not Huff.
 
 ### **Jump tables**
 
 Huff supports tables of jump destinations integrated directly into the contract bytecode. This is to enable efficient program execution flows by using jump tables instead of conditional branching.
 
-An example:  
+An example:
 
 ```
 #define jumptable JUMP_TABLE {
@@ -102,15 +102,15 @@ An example:
 }
 ```
 
-Jump labels will by default occupy 32-bytes of space in the contract bytecode. Packed jump tables, where each label occupies 2 bytes, can be created via `#define jumptable__packed`.  
+Jump labels will by default occupy 32-bytes of space in the contract bytecode. Packed jump tables, where each label occupies 2 bytes, can be created via `#define jumptable__packed`.
 
 ### **Additional features**
 
 Huff currently supports three pieces of syntactic sugar:
 
-* `__codesize(MACRO_NAME)` will push the size of a given macro (in bytes) onto the stack.  
+* `__codesize(MACRO_NAME)` will push the size of a given macro (in bytes) onto the stack.
 * `__tablesize(TABLE_NAME)` will push the size of a given table (in bytes) onto the stack.
-* `__tablestart(TABLE_NAME)` will push the offset (in bytes) between the start of the contract's bytecode and the location of the given table onto the stack.  
+* `__tablestart(TABLE_NAME)` will push the offset (in bytes) between the start of the contract's bytecode and the location of the given table onto the stack.
 
 In addition, when supplying templated arguments to a macro, `+`, `-` and `*` operators can be used if the operands are literals that are known at compile time. For example:
 
@@ -135,7 +135,7 @@ template<p1>
 }
 ```
 
-Literals can be expressed in either decimal form or hexadecimal form (prepended by `0x`).  
+Literals can be expressed in either decimal form or hexadecimal form (prepended by `0x`).
 `push` opcodes are not used in Huff - literals used directly inside Huff code will be replaced with the smallest suitable `push` instruction by the compiler.
 
 ### **"Where can I find example Huff code?"**
@@ -144,7 +144,7 @@ Literals can be expressed in either decimal form or hexadecimal form (prepended 
 
 ### **"...Why is it called Huff?"**
 
-Huff is a game played on a chess-board. One player has chess pieces, the other draughts pieces. The rules don't make any sense, the game is deliberately confusing and it is an almost mathematical certainty that the draughts player will lose. You won't find any reference to it online, because it was `invented' in a pub by some colleagues of mine in a past career and promptly forgotten about for being a terrible game.  
+Huff is a game played on a chess-board. One player has chess pieces, the other draughts pieces. The rules don't make any sense, the game is deliberately confusing and it is an almost mathematical certainty that the draughts player will lose. You won't find any reference to it online, because it was `invented' in a pub by some colleagues of mine in a past career and promptly forgotten about for being a terrible game.
 
 I found that writing Huff macros invoked similar emotions to playing Huff, hence the name.
 
