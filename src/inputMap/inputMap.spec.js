@@ -52,6 +52,7 @@ describe('inputMap tests', () => {
             lineIndex,
         } = inputMap.getFileLine(39, map);
         expect(lineNumber).to.equal(5);
+
         expect(filename).to.equal('foo');
         expect(line).to.equal(' the la');
         expect(lineIndex).to.equal(5);
@@ -63,6 +64,7 @@ describe('inputMap tests', () => {
             lineIndex,
         } = inputMap.getFileLine(200, map));
         expect(lineNumber).to.equal(5);
+
         expect(filename).to.equal('bar');
         expect(line).to.equal('from their zenith in the high Middle Ages.');
         expect(lineIndex).to.equal(5);

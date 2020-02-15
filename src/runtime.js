@@ -6,20 +6,43 @@ const newParser = require('./parser');
 const utils = require('./utils');
 const { opcodes } = require('./opcodes/opcodes');
 
-// eslint-disable-next-line no-unused-vars
-function toBytes32(input, padding = 'left') { // assumes hex format
+function getNewVM() {
+    return new VM({ hardfork: 'constantinople' });
+}
+
+function toBytesN(input, len, padding = 'left') {
+    // assumes hex format
     let s = input;
-    if (s.length > 64) {
-        throw new Error(`string ${input} is more than 32 bytes long!`);
+    if (s.length > len * 2) {
+        throw new Error(`string ${input} is too long!`);
     }
-    while (s.length < 64) {
-        if (padding === 'left') { // left pad to hash a number. Right pad to hash a string
+
+    while (s.length < len * 2) {
+        if (padding === 'left') {
+            // left pad to hash a number. Right pad to hash a string
             s = `0${s}`;
         } else {
             s = `${s}0`;
         }
     }
     return s;
+}
+
+function processMemory(bnArray) {
+    let calldatalength = 0;
+    for (const { index, len } of bnArray) {
+        if (index + len > calldatalength) {
+            calldatalength = index + len;
+        }
+    }
+    const buffer = new Array(calldatalength).fill(0);
+    for (const { index, value, len } of bnArray) {
+        const hex = toBytesN(value.toString(16), len);
+        for (let i = 0; i < hex.length; i += 2) {
+            buffer[i / 2 + index] = parseInt(`${hex[i]}${hex[i + 1]}`, 16);
+        }
+    }
+    return buffer;
 }
 
 function getPushOp(hex) {
@@ -43,16 +66,25 @@ function encodeStack(stack) {
     }, '');
 }
 
-function runCode(vm, bytecode, calldata = null, sourcemapOffset = 0, sourcemap = [], callvalue = 0, debug = false) {
+function runCode(vm, bytecode, calldata, sourcemapOffset = 0, sourcemap = [], callvalue = 0, callerAddr = 0) {
+    if (calldata) {
+        for (const x of calldata) {
+            if (x.len === undefined) {
+                x.len = 32; // set len to 32 if undefined (for sake of backward compatibility)
+            }
+        }
+    }
     return new Promise((resolve, reject) => {
-        vm.runCode({
-            code: Buffer.from(bytecode, 'hex'),
-            gasLimit: Buffer.from('ffffffff', 'hex'),
-            data: calldata, //  ? processMemory(calldata) : null,
-            value: new BN(callvalue),
-        }, (err, results) => {
-            if (err) {
-                if (debug) {
+        vm.runCode(
+            {
+                code: Buffer.from(bytecode, 'hex'),
+                gasLimit: Buffer.from('ffffffff', 'hex'),
+                data: calldata ? processMemory(calldata) : null,
+                value: new BN(callvalue),
+                caller: callerAddr,
+            },
+            (err, results) => {
+                if (err) {
                     console.log(results.runState.programCounter);
                     console.log(sourcemap[results.runState.programCounter - sourcemapOffset]);
                 }
@@ -65,7 +97,7 @@ function runCode(vm, bytecode, calldata = null, sourcemapOffset = 0, sourcemap =
 
 function Runtime(filename, path, debug = false) {
     const { inputMap, macros, jumptables } = newParser.parseFile(filename, path);
-    return async function runMacro(macroName, stack = [], memory = [], calldata = null, callvalue = 0) {
+    return async function runMacro(vm, macroName, stack = [], memory = [], calldata = null, callvalue = 0, callerAddr = 0) {
         const memoryCode = encodeMemory(memory);
         const stackCode = encodeStack(stack);
         const initCode = `${memoryCode}${stackCode}`;
@@ -92,4 +124,5 @@ function Runtime(filename, path, debug = false) {
     };
 }
 
-module.exports = Runtime;
+module.exports.Runtime = Runtime;
+module.exports.getNewVM = getNewVM;
