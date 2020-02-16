@@ -87,8 +87,9 @@ function runCode(vm, bytecode, calldata, sourcemapOffset = 0, sourcemap = [], ca
                 if (err) {
                     console.log(results.runState.programCounter);
                     console.log(sourcemap[results.runState.programCounter - sourcemapOffset]);
+                    return reject(err);
                 }
-                return reject(err);
+                return resolve(results);
             }
         );
     });
@@ -97,6 +98,7 @@ function runCode(vm, bytecode, calldata, sourcemapOffset = 0, sourcemap = [], ca
 function Runtime(filename, path, debug = false) {
     const { inputMap, macros, jumptables } = newParser.parseFile(filename, path);
     return async function runMacro(vm, macroName, stack = [], memory = [], calldata = null, callvalue = 0, callerAddr = 0) {
+
         const memoryCode = encodeMemory(memory);
         const stackCode = encodeStack(stack);
         const initCode = `${memoryCode}${stackCode}`;
@@ -105,14 +107,15 @@ function Runtime(filename, path, debug = false) {
         const {
             data: { bytecode: macroCode, sourcemap },
         } = newParser.processMacro(macroName, offset, [], macros, inputMap, jumptables);
+
         const bytecode = `${initCode}${macroCode}`;
-        const vm = new VM({ hardfork: 'constantinople' });
         const results = await runCode(vm, bytecode, calldata, offset, sourcemap, callvalue, debug);
         const gasSpent = results.runState.gasLimit.sub(results.runState.gasLeft).sub(new BN(initGasEstimate)).toString(10);
         if (debug) {
             console.log('code size = ', macroCode.length / 2);
             console.log('gas consumed = ', gasSpent);
         }
+
         return {
             gas: gasSpent,
             stack: results.runState.stack,
