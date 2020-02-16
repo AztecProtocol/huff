@@ -240,7 +240,7 @@ describe('parser tests', () => {
             const output = parser.processMacro('PACKED_TABLE_TEST', 0, [], macros, map, jumptables);
             const { jumpindices, bytecode } = output.data;
             expect(jumpindices.lsb_0).to.equal(5);
-            expect(bytecode).to.equal('60026100065b0005');
+            expect(bytecode).to.equal('60026100065b000005');
         })
     });
 

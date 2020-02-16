@@ -332,7 +332,7 @@ parser.processMacro = (
         }
         const pre = bytecode.slice(0, (offset * 2) + 2);
         const post = bytecode.slice((offset * 2) + 6);
-        bytecode = `${pre}${formatEvenBytes(toHex(tableOffsets[tableInstance.label]))}${post}`;
+        bytecode = `${pre}${padNBytes(formatEvenBytes(toHex(tableOffsets[tableInstance.label])), 2)}${post}`;
     });
     return {
         ...result,
