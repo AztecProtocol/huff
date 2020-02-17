@@ -117,7 +117,7 @@ parser.processNumericLiteral = (literal) => {
  * @param op
  * @param macros
  */
-parser.processMacroLiteral = (op, macros) => {
+parser.processMacroLiteral = (op, macros, map) => {
     if (op.match(grammar.macro.LITERAL_HEX)) {
         return new BN(op.match(grammar.macro.LITERAL_HEX)[1], 16);
     }
@@ -127,10 +127,31 @@ parser.processMacroLiteral = (op, macros) => {
     // TODO: is this needed? It converts opcodes weirdly
     if (macros[op]) {
         check(
-            macros[op].ops.length === 1 && macros[op].ops[0].type === TYPES.PUSH,
-            `cannot add ${op}, ${macros[op].ops} not a literal`
+            macros[op].ops.length === 1,
+            `cannot add ${op}, contains more than 1 operation`
         );
-        return new BN(macros[op].ops[0].args[0], 16);
+
+        const literal = macros[op].ops[0];
+        switch(literal.type) {
+            case TYPES.PUSH: {
+                return new BN(macros[op].ops[0].args[0], 16);
+            }
+            case TYPES.CODESIZE: {
+                const result = parser.processMacroInternal(
+                    literal.value,
+                    literal.index,
+                    literal.args,
+                    macros,
+                    map,
+                    {},
+                    []
+                );
+                return new BN(formatEvenBytes(result.data.bytecode.length / 2));
+            }
+            default: {
+                 throw new Error(`cannot add ${op}, ${macros[op].ops} not a literal`);
+            }
+        }
     }
     throw new Error(`I don't know how to process literal "${op}" as a macro literal`);
 };
@@ -179,13 +200,13 @@ parser.processModifiedOpcode = (literal) => {
     return opcodes[stackOpcodeType + finalNumber.toString()];
 };
 
-parser.processTemplateLiteral = (literal, macros) => {
+parser.processTemplateLiteral = (literal, macros, map) => {
     function parseLiteral(rawOp) {
         const op = regex.removeSpacesAndLines(rawOp);
         if (regex.containsOperatorsAndIsNotStackOp(op)) {
-            return parser.processTemplateLiteral(op, macros);
+            return parser.processTemplateLiteral(op, macros, map);
         }
-        return parser.processMacroOrNumericOrTemplateLiteral(op, macros);
+        return parser.processMacroOrNumericOrTemplateLiteral(op, macros, map);
     }
 
     if (literal.includes('-')) {
@@ -212,10 +233,10 @@ parser.processTemplateLiteral = (literal, macros) => {
             return acc.mul(val);
         }, null));
     }
-    return parser.processMacroLiteral(literal, macros);
+    return parser.processMacroLiteral(literal, macros, map);
 };
 
-parser.parseTemplate = (templateName, macros = {}, index = 0, debug = {}) => {
+parser.parseTemplate = (templateName, macros = {}, map = {}, index = 0, debug = {}) => {
     const macroId = parser.getId();
     const inlineTemplateName = `inline-${templateName}-${macroId}`;
     let opsType = '';
@@ -223,7 +244,7 @@ parser.parseTemplate = (templateName, macros = {}, index = 0, debug = {}) => {
     let opsArgs = [];
     let name = templateName;
     if (regex.isLiteral(templateName)) {
-        const hex = formatEvenBytes(parser.processTemplateLiteral(templateName, macros).toString(16));
+        const hex = formatEvenBytes(parser.processTemplateLiteral(templateName, macros, map).toString(16));
         const opcode = toHex(95 + (hex.length / 2));
         opsType = TYPES.PUSH;
         opsValue = opcode;
