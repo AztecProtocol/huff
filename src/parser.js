@@ -301,17 +301,20 @@ parser.processMacro = (
         if (jumptable.table.jumps) {
             tableOffsets[jumptable.name] = tableOffset;
             tableOffset += jumptable.table.size;
-            tablecode = jumptable.table.jumps.map((jumplabel) => {
-                if (!result.jumpindices[jumplabel]) {
-                    return '';
-                }
-                const offset = result.jumpindices[jumplabel];
-                const hex = formatEvenBytes(toHex(offset));
-                if (!jumptable.table.compressed) {
-                    return padNBytes(hex, 0x20);
-                }
-                return hex;
-            }).join('');
+            tablecode = jumptable.table.jumps
+                .map((jumplabel) => {
+                    if (!result.jumpindices[jumplabel]) {
+                        return '';
+                    }
+                    const offset = result.jumpindices[jumplabel];
+                    const hex = formatEvenBytes(toHex(offset));
+                    if (!jumptable.table.compressed) {
+                        return padNBytes(hex, 0x20);
+                    } else {
+                        return padNBytes(hex, 0x02);
+                    }
+                })
+                .join('');
         } else {
             tablecode = jumptable.table.table;
             tableOffsets[jumptable.name] = tableOffset;
@@ -329,7 +332,7 @@ parser.processMacro = (
         }
         const pre = bytecode.slice(0, (offset * 2) + 2);
         const post = bytecode.slice((offset * 2) + 6);
-        bytecode = `${pre}${formatEvenBytes(toHex(tableOffsets[tableInstance.label]))}${post}`;
+        bytecode = `${pre}${padNBytes(formatEvenBytes(toHex(tableOffsets[tableInstance.label])), 2)}${post}`;
     });
     return {
         ...result,
@@ -523,6 +526,7 @@ parser.processMacroInternal = (
         bytecode: '',
         sourcemap: [],
     });
+
 
     return {
         data,
