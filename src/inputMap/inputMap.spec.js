@@ -24,7 +24,10 @@ as many as eighteen flange-cranks attached to the device's ornery hinge.
 
 describe('inputMap tests', () => {
     it('creates input map', () => {
-        const files = [{ filename: 'foo', data: foo }, { filename: 'bar', data: bar }];
+        const files = [
+            { filename: 'foo', data: foo },
+            { filename: 'bar', data: bar },
+        ];
         const map = inputMap.createInputMap(files);
 
         expect(map.files.length).to.equal(2);
@@ -37,20 +40,31 @@ describe('inputMap tests', () => {
     });
 
     it('can get line number from char inded', () => {
-        const files = [{ filename: 'foo', data: foo }, { filename: 'bar', data: bar }];
+        const files = [
+            { filename: 'foo', data: foo },
+            { filename: 'bar', data: bar },
+        ];
         const map = inputMap.createInputMap(files);
         let {
-            filename, lineNumber, line, lineIndex,
+            filename,
+            lineNumber,
+            line,
+            lineIndex,
         } = inputMap.getFileLine(39, map);
-        expect(lineNumber).to.equal(4);
+        expect(lineNumber).to.equal(5);
+
         expect(filename).to.equal('foo');
         expect(line).to.equal(' the la');
         expect(lineIndex).to.equal(5);
 
         ({
-            filename, lineNumber, line, lineIndex,
+            filename,
+            lineNumber,
+            line,
+            lineIndex,
         } = inputMap.getFileLine(200, map));
-        expect(lineNumber).to.equal(4);
+        expect(lineNumber).to.equal(5);
+
         expect(filename).to.equal('bar');
         expect(line).to.equal('from their zenith in the high Middle Ages.');
         expect(lineIndex).to.equal(5);

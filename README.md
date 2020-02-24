@@ -12,7 +12,7 @@ Huff doesn't hide the workings of the EVM behind syntactic sugar. In fact, Huff 
 
 I developed Huff while writing [weierstrudel](https://github.com/AztecProtocol/weierstrudel/tree/master/huff_modules), an elliptic curve arithmetic library. Huff is designed for developing highly optimized algorithms where direct manipulation of the program's bytecode is preferred.
 
-Huff supports a form of templating - Huff macros can accept template parameters, which in turn are Huff macros. This allows for customizable macros that are ideal for loop unrolling.
+Huff supports a form of templating - Huff macros can accept template parameters, which in turn are Huff macros. This allows for customizable macros that are ideal for loop unrolling. 
 
 Huff algorithms can be broken down into their constituent macros and rigorously tested without having to split the algorithm into functions and invoke jump instructions.
 
@@ -20,9 +20,9 @@ Huff algorithms can be broken down into their constituent macros and rigorously 
 
 There are only two fundamental building blocks to a Huff program:
 
--   Macros
--   Jump tables (and packed jump tables)
--   (TODO: add bytecode tables)
+* Macros
+* Jump tables (and packed jump tables)
+* (TODO: add bytecode tables)
 
 ### **Macros**
 
@@ -67,8 +67,8 @@ template <p1,p2>
 }
 ```
 
-The `takes` parameter defines the number of items the macro expects to be on the stack.  
-The `returns` parameter defines the number of items the macro will leave on the stack (including the items from `takes`).  
+The `takes` parameter defines the number of items the macro expects to be on the stack.
+The `returns` parameter defines the number of items the macro will leave on the stack (including the items from `takes`).
 These fields are for illustrative purposes only - they are not enforced by the compiler, as that would inhibit macros where the stack state is unknowable at compile time. Some languages might consider that a negative, but not Huff.
 
 ### **Jump tables**
@@ -108,9 +108,9 @@ Jump labels will by default occupy 32-bytes of space in the contract bytecode. P
 
 Huff currently supports three pieces of syntactic sugar:
 
--   `__codesize(MACRO_NAME)` will push the size of a given macro (in bytes) onto the stack.
--   `__tablesize(TABLE_NAME)` will push the size of a given table (in bytes) onto the stack.
--   `__tablestart(TABLE_NAME)` will push the offset (in bytes) between the start of the contract's bytecode and the location of the given table onto the stack.
+* `__codesize(MACRO_NAME)` will push the size of a given macro (in bytes) onto the stack.
+* `__tablesize(TABLE_NAME)` will push the size of a given table (in bytes) onto the stack.
+* `__tablestart(TABLE_NAME)` will push the offset (in bytes) between the start of the contract's bytecode and the location of the given table onto the stack.
 
 In addition, when supplying templated arguments to a macro, `+`, `-` and `*` operators can be used if the operands are literals that are known at compile time. For example:
 
@@ -135,7 +135,7 @@ template<p1>
 }
 ```
 
-Literals can be expressed in either decimal form or hexadecimal form (prepended by `0x`).  
+Literals can be expressed in either decimal form or hexadecimal form (prepended by `0x`).
 `push` opcodes are not used in Huff - literals used directly inside Huff code will be replaced with the smallest suitable `push` instruction by the compiler.
 
 ### **"Where can I find example Huff code?"**
@@ -158,23 +158,27 @@ Please, by all means. Huff is open-source and licensed under LGPL-3.0.
 const { Runtime } = require('huff');
 
 const main = new Runtime('main_loop.huff', 'path_to_macros');
-const calldata = [
-    // calldata for macro
+const calldata = [ // calldata for macro
     { index: 0, value: new BN(1) },
     { index: 32, value: new BN(2) },
 ];
-const initialMemory = [
-    // intial memory state expected by macro
+const initialMemory = [ // intial memory state expected by macro
     { index: 0, value: new BN(1234134) },
     { index: 32, value: new BN(29384729832) },
 ];
 const inputStack = [new BN(1), new BN(6)]; // initial stack state expected by macro
 const callvalue = 1; // amount of wei in transaction
-const { stack, memory, gas, bytecode, returnData } = await main('MACRO_NAME', initialStack, initialMemory, calldata, callvalue);
+const {
+    stack,
+    memory,
+    gas,
+    bytecode,
+    returnValue,
+} = await main('MACRO_NAME', initialStack, initialMemory, calldata, callvalue);
 
 console.log('gas cost when executing macro = ', gas);
 console.log('macro bytecode = ', bytecode);
-console.log('macro return data = ', returnData);
+console.log('macro return data = ', returnValue);
 console.log('output stack state = ', stack);
 console.log('output memory state = ', memory);
 ```

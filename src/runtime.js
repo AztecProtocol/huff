@@ -16,6 +16,7 @@ function toBytesN(input, len, padding = 'left') {
     if (s.length > len * 2) {
         throw new Error(`string ${input} is too long!`);
     }
+    
     while (s.length < len * 2) {
         if (padding === 'left') {
             // left pad to hash a number. Right pad to hash a string
@@ -46,7 +47,7 @@ function processMemory(bnArray) {
 
 function getPushOp(hex) {
     const data = utils.formatEvenBytes(hex);
-    const opcode = utils.toHex(95 + data.length / 2);
+    const opcode = utils.toHex(95 + (data.length / 2));
     return `${opcode}${data}`;
 }
 
@@ -90,40 +91,41 @@ function runCode(vm, bytecode, calldata, sourcemapOffset = 0, sourcemap = [], ca
                 }
                 return resolve(results);
             }
-        );
-    });
-}
-
-function Runtime(filename, path, debug = false) {
-    const { inputMap, macros, jumptables } = newParser.parseFile(filename, path);
-    return async function runMacro(vm, macroName, stack = [], memory = [], calldata = null, callvalue = 0, callerAddr = 0) {
-        const memoryCode = encodeMemory(memory);
-        const stackCode = encodeStack(stack);
-        const initCode = `${memoryCode}${stackCode}`;
-        const initGasEstimate = memory.length * 9 + stack.length * 3;
-        const offset = initCode.length / 2;
-        const {
-            data: { bytecode: macroCode, sourcemap },
-        } = newParser.processMacro(macroName, offset, [], macros, inputMap, jumptables); // prettier-ignore
-        const bytecode = `${initCode}${macroCode}`;
-        const results = await runCode(vm, bytecode, calldata, offset, sourcemap, callvalue, callerAddr);
-        const gasSpent = results.runState.gasLimit
-            .sub(results.runState.gasLeft)
-            .sub(new BN(initGasEstimate))
-            .toString(10);
-        if (debug) {
-            console.log('code size = ', macroCode.length / 2);
-            console.log('gas consumed = ', gasSpent);
-        }
-        return {
-            gas: gasSpent,
-            stack: results.runState.stack,
-            memory: results.runState.memory,
-            returnValue: results.runState.returnValue,
-            bytecode: macroCode,
+            );
+        });
+    }
+    
+    function Runtime(filename, path, debug = false) {
+        const { inputMap, macros, jumptables } = newParser.parseFile(filename, path);
+        return async function runMacro(vm, macroName, stack = [], memory = [], calldata = null, callvalue = 0, callerAddr = 0) {
+            
+            const memoryCode = encodeMemory(memory);
+            const stackCode = encodeStack(stack);
+            const initCode = `${memoryCode}${stackCode}`;
+            const initGasEstimate = (memory.length * 9) + (stack.length * 3);
+            const offset = initCode.length / 2;
+            const {
+                data: { bytecode: macroCode, sourcemap },
+            } = newParser.processMacro(macroName, offset, [], macros, inputMap, jumptables);
+            
+            const bytecode = `${initCode}${macroCode}`;
+            const results = await runCode(vm, bytecode, calldata, offset, sourcemap, callvalue, debug);
+            const gasSpent = results.runState.gasLimit.sub(results.runState.gasLeft).sub(new BN(initGasEstimate)).toString(10);
+            if (debug) {
+                console.log('code size = ', macroCode.length / 2);
+                console.log('gas consumed = ', gasSpent);
+            }
+            
+            return {
+                gas: gasSpent,
+                stack: results.runState.stack,
+                memory: results.runState.memory,
+                returnValue: results.runState.returnValue,
+                bytecode: macroCode,
+            };
         };
-    };
-}
-
-module.exports.Runtime = Runtime;
-module.exports.getNewVM = getNewVM;
+    }
+    
+    module.exports.Runtime = Runtime;
+    module.exports.getNewVM = getNewVM;
+    

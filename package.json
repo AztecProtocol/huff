@@ -1,29 +1,35 @@
 {
   "name": "@aztec/huff",
-  "description": "Compiler for Huff, a DSL for low-level Ethereum smart contract programming",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "author": "AZTEC",
+  "description": "Compiler for Huff, a DSL for low-level Ethereum smart contract programming",
+  "license": "LGPL-3.0",
+  "main": "./src",
+  "files": [
+    "/lib"
+  ],
+  "homepage": "https://github.com/AztecProtocol/AZTEC#readme",
   "bugs": {
     "url": "https://github.com/AztecProtocol/huff/issues"
   },
   "dependencies": {
     "bn.js": "^4.11.8",
-    "ethereumjs-vm": "^2.5.1"
+    "ethereumjs-vm": "^2.5.1",
+    "glob": "^7.1.3",
+    "mkdirp": "^0.5.1",
+    "yargs": "^13.2.1"
   },
   "devDependencies": {
     "chai": "^4.2.0",
-    "eslint": "^5.15.3",
+    "eslint": "^5.12.1",
     "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-config-prettier": "^4.1.0",
     "eslint-plugin-import": "^2.16.0",
-    "fixpack": "^2.3.1",
-    "mocha": "^6.0.2",
+    "mocha": "^5.2.0",
     "sinon": "^7.2.3"
   },
   "engines": {
     "node": ">=8.3"
   },
-  "homepage": "https://github.com/AztecProtocol/huff/tree/master/#readme",
   "keywords": [
     "blockchain",
     "ethereum",
@@ -32,8 +38,6 @@
     "programming-language",
     "smart-contracts"
   ],
-  "license": "LGPL-3.0",
-  "main": "./src",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/AztecProtocol/huff.git"
